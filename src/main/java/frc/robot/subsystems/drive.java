@@ -7,10 +7,12 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
+import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -23,7 +25,7 @@ public class drive extends SubsystemBase {
   // private final TalonFX m_test_motor3 = new TalonFX(3, "rio");
   // private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
   //特性：请求制，需要一个request
-  private final MotionMagicVoltage m_test_motor_request = new MotionMagicVoltage(0.0);
+  private final VelocityTorqueCurrentFOC m_test_motor_request = new VelocityTorqueCurrentFOC(0.0);
 
   
   //实际控制
@@ -35,8 +37,8 @@ public class drive extends SubsystemBase {
   //withPosition能够将高级的控制请求和底层的位置控制建立联系
   //withvelocity能够将高级的控制请求和底层的速度控制建立联系
 
-  public void setmotorPosition(double vol) {
-    m_test_motor.setControl(m_test_motor_request.withPosition(vol));
+  public void setmotorVelocity(double vol) {
+    m_test_motor.setControl(m_test_motor_request.withVelocity(vol));
     // m_test_motor2.setControl(m_test_motor_request.withPosition(vol));
 
   // public void setmotorPosition2(double vol) {
@@ -45,12 +47,12 @@ public class drive extends SubsystemBase {
 
   }
 
-  public Command Motor_Position_command(double  position){
+  public Command Motor_Velocity_command(double  velocity){
     return runEnd(()->{
-      setmotorPosition(position); // Set the motor to move at 1000 units per second
+      setmotorVelocity(velocity); // Set the motor to move at 1000 units per second
                    },
     () -> {
-      setmotorPosition(0);
+      setmotorVelocity(0);
     
     });
   
@@ -74,12 +76,12 @@ public class drive extends SubsystemBase {
 
 
     //每个电机都需要的配置
-    motorConfigs.Slot0.kS = 0.14;   //slot 槽 一块区域
+    motorConfigs.Slot0.kS = 1.5;   //slot 槽 一块区域
     motorConfigs.Slot0.kV = 0.0;
     motorConfigs.Slot0.kA = 0;
-    motorConfigs.Slot0.kP = 10;
+    motorConfigs.Slot0.kP = 7;
     motorConfigs.Slot0.kI = 0;
-    motorConfigs.Slot0.kD = 0;
+    motorConfigs.Slot0.kD = 0.1;
 
   
 
