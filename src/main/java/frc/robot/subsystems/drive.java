@@ -9,6 +9,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.Led1OffColorValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.wpilibj2.command.Command;
@@ -20,14 +21,14 @@ public class drive extends SubsystemBase {
 
   //声明电机
   private final TalonFX m_test_motor = new TalonFX(1, "rio");
-  private final TalonFX m_test_motor2 = new TalonFX(2, "rio");
-  private final TalonFX m_test_motor3 = new TalonFX(3, "rio");
-  private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
+  // private final TalonFX m_test_motor2 = new TalonFX(2, "rio");
+  // private final TalonFX m_test_motor3 = new TalonFX(3, "rio");
+  // private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
   //特性：请求制，需要一个request
-  private final VoltageOut m_test_motor_request = new VoltageOut(0.0);
-  private final VoltageOut m_test_motor2_request = new VoltageOut(0.0);
-  private final VoltageOut m_test_motor3_request = new VoltageOut(0.0);
-  private final VoltageOut m_test_motor4_request = new VoltageOut(0.0);
+  private final MotionMagicVoltage m_test_motor_request = new MotionMagicVoltage(0.0);
+  // private final MotionMagicVoltage m_test_motor2_request = new MotionMagicVoltage(0.0);
+  // private final MotionMagicVoltage m_test_motor3_request = new MotionMagicVoltage(0.0);
+  // private final MotionMagicVoltage m_test_motor4_request = new MotionMagicVoltage(0.0);
   
   //实际控制
   //封装出来的方法
@@ -38,28 +39,32 @@ public class drive extends SubsystemBase {
   //withPosition能够将高级的控制请求和底层的位置控制建立联系
   //withvelocity能够将高级的控制请求和底层的速度控制建立联系
 
-  public void setmotorVoltage(double vol) {
-    m_test_motor.setControl(m_test_motor_request.withOutput(vol));
-    m_test_motor2.setControl(m_test_motor2_request.withOutput(vol));
+  public void setmotorPosition(double vol) {
+    m_test_motor.setControl(m_test_motor_request.withPosition(vol));
+    // m_test_motor2.setControl(m_test_motor2_request.withPosition(vol));
   }
 
-  public void setmotorVoltage2(double vol) {
-    m_test_motor3.setControl(m_test_motor3_request.withOutput(vol));
-    m_test_motor4.setControl(m_test_motor4_request.withOutput(vol));
+  // public void setmotorPosition2(double vol) {
+  //   m_test_motor3.setControl(m_test_motor3_request.withPosition(vol));
+  //   m_test_motor4.setControl(m_test_motor4_request.withPosition(vol));
 
+  // }
+
+  // public Command Motor_Position_command2(double  position){
+  //   return run(()->{
+  //     setmotorPosition2(position); // Set the motor to move at 1000 units per second
+  //   });
+  // }
+
+  public Command Motor_Position_command(double  Position){
+    return runEnd(()->{
+                      setmotorPosition(Position); // Set the motor to move at 1000 units per second
+                      },
+                  ()->{
+                    setmotorPosition(0);
+                  });
   }
 
-  public Command Motor_Voltage_command(double  voltage){
-    return run(()->{
-      setmotorVoltage(voltage); // Set the motor to move at 1000 units per second
-    });
-  }
-
-  public Command Motor_Voltage_command2(double  voltage){
-    return run(()->{
-      setmotorVoltage2(voltage); // Set the motor to move at 1000 units per second
-    });
-  }
   public drive() {
 
     var motorEncoderConfigs = new CANcoderConfiguration();
@@ -75,6 +80,31 @@ public class drive extends SubsystemBase {
     motorConfigs.Slot0.kP = 3;
     motorConfigs.Slot0.kI = 0;
     motorConfigs.Slot0.kD = 0;
+
+    // 手动调整通常遵循以下过程：
+
+    // 将所有增益设置为零。
+    //克服重力的参数，kg从0开始逐渐增加，直到松手电梯能够大概稳定在当前位置，不会下坠
+
+    // 确定是否使用电梯或手臂。
+    //如果是速度控制，就用velocitysign，位置控制就用colsedloopsign
+
+    // 为您的闭环类型选择适当的静态前馈符号。
+    //逐步增加ks直到电机微微有反应，处在一种临界要动但是没动的状态
+
+    // 增加直到电机移动之前。
+
+    // 如果使用速度设定点，请增加速度，直到输出速度与速度设定点紧密匹配。
+    //如果你使用速度控制并且需要设定速度到某个值，可以逐步增加kv直到你的速度到达设定值
+    //kv是一个放大系数，当我的速度不够的时候，用这个来提高我的速度到预期值
+
+    // 增加直到输出开始在设定点附近振荡。
+    //逐步增加kp直到我的当前位置（设定速度）开始在设定的位置（设定速度）附近震动
+
+    // 尽可能增加，不要给响应带来抖动。
+    //逐步增加kd直到引入了新的震动
+
+
     motorConfigs.MotionMagic.MotionMagicAcceleration = 100; // Acceleration is around 40 rps/s
     motorConfigs.MotionMagic.MotionMagicCruiseVelocity = 200; // Unlimited cruise velocity
     motorConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
@@ -82,9 +112,9 @@ public class drive extends SubsystemBase {
     motorConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
 
     m_test_motor.getConfigurator().apply(motorConfigs);
-    m_test_motor2.getConfigurator().apply(motorConfigs);
-    m_test_motor3.getConfigurator().apply(motorConfigs);
-    m_test_motor4.getConfigurator().apply(motorConfigs);
+    // m_test_motor2.getConfigurator().apply(motorConfigs);
+    // m_test_motor3.getConfigurator().apply(motorConfigs);
+    // m_test_motor4.getConfigurator().apply(motorConfigs);
   }
 
 
