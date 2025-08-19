@@ -5,13 +5,14 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
-// import frc.robot.commands.Autos;
-// import frc.robot.commands.ExampleCommand;
-// import frc.robot.subsystems.ExampleSubsystem;
+//import frc.robot.commands.Autos;
+//import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.drive;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+
+//包：功能包，负责某一类特定的功能
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -21,7 +22,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final drive m_drive_subsystenm = new drive();
+  private final drive m_driveSubsystem = new drive();
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
@@ -43,18 +44,29 @@ public class RobotContainer {
    * joysticks}.
    */
 
+   //按键.ontrue(xxxxxx命令)：实现了按键和命令的绑定
+
+   //ontrue：按下触发
+   //whiletrue：按住一直触发
   private void configureBindings() {
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
+//    new Trigger(m_exampleSubsystem::exampleCondition)      //官方定义的触发器，trigger对象
+//        .onTrue(new ExampleCommand(m_exampleSubsystem));
 
-
-    // new Trigger(m_exampleSubsystem::exampleCondition).onTrue(new ExampleCommand(m_exampleSubsystem));
-
-    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
+    // Schedule `exampleM ethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
-    m_driverController.b().whileTrue(m_drive_subsystenm.Motor_Voltage_command(0));
-    m_driverController.a().whileTrue(m_drive_subsystenm.Motor_Voltage_command(2));
-    m_driverController.x().whileTrue(m_drive_subsystenm.Motor_Voltage_command2(2));
-    m_driverController.x().whileFalse(m_drive_subsystenm.Motor_Voltage_command2(0));
+    m_driverController.a()//trigger对象，b按键按下的时候，条件变为true
+    .onTrue(m_driveSubsystem.Motor_Move_Voltage(0));
+
+
+    m_driverController.b().onTrue(m_driveSubsystem.Motor_Move_Voltage(2));
+
+    m_driverController.x().whileTrue(m_driveSubsystem.Motor_Move_Voltage2(2));
+    m_driverController.x().whileFalse(m_driveSubsystem.Motor_Move_Voltage2(0));
+
+
+
+  
   }
 
   /**
@@ -62,8 +74,5 @@ public class RobotContainer {
    *
    * @return the command to run in autonomous
    */
-  // public Command getAutonomousCommand() {
-  //   // An example command will be run in autonomous
-  //   return Autos.exampleAuto(m_exampleSubsystem);
-  // }
+
 }
