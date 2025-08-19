@@ -55,14 +55,15 @@ public class RobotContainer {
 
     // Schedule `exampleM ethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
-    m_driverController.a()//trigger对象，b按键按下的时候，条件变为true
-    .onTrue(m_driveSubsystem.Motor_Move_Voltage(0));
 
 
-    m_driverController.b().onTrue(m_driveSubsystem.Motor_Move_Voltage(2));
+    //m_driverController.a()//trigger对象，b按键按下的时候，条件变为true
+    //.onTrue(m_driveSubsystem.Motor_Move_Position(50));
 
-    m_driverController.x().whileTrue(m_driveSubsystem.Motor_Move_Voltage2(2));
-    m_driverController.x().whileFalse(m_driveSubsystem.Motor_Move_Voltage2(0));
+
+
+
+    m_driverController.a().whileTrue(m_driveSubsystem.Motor_Velocity_withRunend(10));
 
 
 

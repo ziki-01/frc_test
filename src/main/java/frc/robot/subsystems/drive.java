@@ -6,44 +6,48 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
+//Voltage Out 不受PID影响
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
+import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 
 public class drive extends SubsystemBase {
-  public static final Command Motor_Move_Voltage = null;
+  public static final Command Motor_Move_VelocityTorqueCurrentFOC = null;
   //声明电机
-   private final TalonFX m_test_motor = new TalonFX(2, "rio");
+   private final TalonFX m_test_motor = new TalonFX(1, "rio");
 
-   private final TalonFX m_test_motor2 = new TalonFX(1, "rio");
+   private final TalonFX m_test_motor2 = new TalonFX(2, "rio");
 
    private final TalonFX m_test_motor3 = new TalonFX(3, "rio");
 
    private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
   //请求制，需要一个request
-  private final VoltageOut m_test_motor_request = new VoltageOut(0.0);
+  private final VelocityTorqueCurrentFOC m_test_motor_request = new VelocityTorqueCurrentFOC(0.0);
 
-  private final VoltageOut m_test_motor_request2 = new VoltageOut(0.0);
+  private final VelocityTorqueCurrentFOC m_test_motor_request2 = new VelocityTorqueCurrentFOC(0.0);
   
-  private final VoltageOut m_test_motor_request3 = new VoltageOut(0.0);
+  private final VelocityTorqueCurrentFOC m_test_motor_request3 = new VelocityTorqueCurrentFOC(0.0);
 
-  private final VoltageOut m_test_motor_request4 = new VoltageOut(0.0);
+  private final VelocityTorqueCurrentFOC m_test_motor_request4 = new VelocityTorqueCurrentFOC(0.0);
   //电机控制：时间速度
 
   //withPosition：高级的控制请求和底层的逻辑进行连接
   //withVelocity: 高级的控制请求和底层的逻辑进行连接
-  public void setmotorVoltage(double vol) {
-    m_test_motor.setControl(m_test_motor_request.withOutput(vol));
-    m_test_motor2.setControl(m_test_motor_request2.withOutput(vol));
+  public void setmotorVelocity(double velocity) {
+    m_test_motor.setControl(m_test_motor_request.withVelocity(velocity));
 
   }
 
-  public void setmotorVoltage2(double vol) {
-    m_test_motor3.setControl(m_test_motor_request3.withOutput(vol));
-    m_test_motor4.setControl(m_test_motor_request4.withOutput(vol));
+  public void setmotorVelocity2(double velocity) {
+    m_test_motor3.setControl(m_test_motor_request3.withVelocity(velocity));
+    m_test_motor4.setControl(m_test_motor_request4.withVelocity(velocity));
   }
 
 
@@ -52,17 +56,33 @@ public class drive extends SubsystemBase {
   public drive() {
       var motorConfigs = new TalonFXConfiguration();
 
-      motorConfigs.Slot0.kS = 0.2;
+      //每个电机都有的固定参数        
+      // motorConfigs.Slot0.kS = 0.14;
+      // motorConfigs.Slot0.kV = 0.0;            直接控制
+      // motorConfigs.Slot0.kA = 0;
+      // motorConfigs.Slot0.kP = 10;
+      // motorConfigs.Slot0.kI = 0;
+      // motorConfigs.Slot0.kD = 0;
+      // motorConfigs.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+      // motorConfigs.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseClosedLoopSign;
+
+      motorConfigs.Slot0.kS = 1.85;
       motorConfigs.Slot0.kV = 0.0;
-      motorConfigs.Slot0.kA = 0;
-      motorConfigs.Slot0.kP = 3;
+      motorConfigs.Slot0.kA = 0;             //FOC
+      motorConfigs.Slot0.kP = 6;
       motorConfigs.Slot0.kI = 0;
-      motorConfigs.Slot0.kD = 0;
+      motorConfigs.Slot0.kD = 0.1;
+      motorConfigs.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+      motorConfigs.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseVelocitySign;
+
+      //高级控制才用到下面的参数
       motorConfigs.MotionMagic.MotionMagicAcceleration = 100; // Acceleration is around 40 rps/s
       motorConfigs.MotionMagic.MotionMagicCruiseVelocity = 200; // Unlimited cruise velocity
       motorConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
       motorConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
       motorConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0'
+// 电机的配置参数 ： kS kV kA kP kI kD MotionMagicAcceleration MotionMagicCruiseVelocity MotionMagicExpo_kV MotionMagicExpo_kA MotionMagicJerk
+//slot → 槽   一块区域 id：0
 
       m_test_motor.getConfigurator().apply(motorConfigs);
       m_test_motor2.getConfigurator().apply(motorConfigs);
@@ -71,15 +91,54 @@ public class drive extends SubsystemBase {
   }
 
 
-  public Command Motor_Move_Voltage(double voltage){
+//Voltage_Out 原理：
+//假设最大输出电压是12v， 那么12v对应 1000r/min
+//6v                                500r/min
+//0v                                0r/min
+
+//开环控制：敞开的系统，他不准确，他也不知道自己准不准确，比较盲目
+//闭环控制：闭合的控制，相对准确，当他不准确的时候，他知道自己不准确，并且他自己知道他的状态和预期有差距
+//他就能根据这个差距，调整自己，然后接近我们的预期
+//闭环有一个反馈
+
+
+
+
+//想要控制速度到50
+//40-50-40-50-40-50   →    不稳定
+//想要控制位置到100
+//90-80-100-90-80-100    →    不稳定
+
+
+
+//想要控制速度到50
+//48-50-49-50-48-50    →   稳定
+//想要控制位置到100
+//100-98-97-100    →   稳定
+
+
+//电机不稳定
+//1.不安全    →   电机不受控
+//2.
+
+  public Command Motor_Move_Velocity(double velocity){
     return run(()->{
-      setmotorVoltage(voltage); // Set the motor to move at 1000 units per second
+      setmotorVelocity(velocity); // Set the motor to move at 1000 units per second
     });
   }
 
-  public Command Motor_Move_Voltage2(double voltage){
+  public Command Motor_Move_Velocity2(double velocity){
     return run(()->{
-      setmotorVoltage2(voltage); // Set the motor to move at 1000 units per second
+      setmotorVelocity2(velocity); // Set the motor to move at 1000 units per second
+    });
+  }
+
+  public Command Motor_Velocity_withRunend(double velocity){
+    return runEnd(()->{
+      setmotorVelocity(velocity);
+    },
+    ()->{
+      setmotorVelocity(0);
     });
   }
 
@@ -141,4 +200,48 @@ public class drive extends SubsystemBase {
 //1.其他编程，for while，每一次运行的时间不一样，受限于电脑
 //但是frc，没有显式的for 和 while
 //periodic(): 每隔20ms轮询一次
-//2.
+
+
+
+/**
+电机参数的说明
+
+Position Control
+kG - output to overcome gravity (output)
+克服重力的输出（输出）
+kS - Velocity Sign: unused; Closed-Loop Sign: output to overcome static friction (output)
+闭环：克服静摩擦的输出（输出）
+kV - unused, as there is no target velocity
+未使用，因为没有目标速度
+kA - unused, as there is no target acceleration
+未使用，因为没有目标加速度
+kP - output per unit of error in position (output/rotation)
+每单位位置误差的输出（输出/旋转）
+kI - output per unit of integrated error in position (output/(rotation*s))
+每单位积分误差的输出（输出/（旋转*s））
+kD - output per unit of error derivative in position (output/rps)
+每单位位置误差导数的输出（输出/rps
+
+电机参数的调试方法
+1.Set all gains to zero.
+将所有参数设为0
+
+2.Determine kG if using an elevator or arm.
+克服重力的参数，kG从0开始增加，知道松手电梯能大概稳定在当前位置，不会下坠
+
+3.Select the appropriate Static Feedforward Sign for your closed-loop type.
+如果是速度控制就用“UseVelocitySign", 位置控制就用"UseClosedLoopSign"
+
+4.Increase kS until just before the motor moves.
+逐步增加kS直到电机微微有反应，处在一种动与不动的临界点之间
+
+5.If using velocity setpoints, increase kV until the output velocity closely matches the velocity setpoints.
+如果你用速度控制并且需要设定速度到某一个值，可以逐步增加kV知道速度达到设定值
+kV是一个放大系数，当我的速度不够时，用这个来提高我的速度设定值
+
+6.Increase kP until the output starts to oscillate around the setpoint.
+逐步增加kP直到我的当前位置（预期设定的速度）开始在设定位置的（设定速度）附近震动
+
+7.Increase kD as much as possible without introducing jittering to the response.
+逐步增加kD直到引入了新的震动
+*/
