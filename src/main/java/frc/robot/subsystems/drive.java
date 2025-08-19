@@ -17,14 +17,13 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 //基类：
 public class drive extends SubsystemBase {
-
   //声明电机
-  private final TalonFX m_test_motor = new TalonFX(1, "rio");
-  private final TalonFX m_test_motor2 = new TalonFX(2, "rio");
-  private final TalonFX m_test_motor3 = new TalonFX(3, "rio");
-  private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
+  private final TalonFX m_test_motor = new TalonFX(11, "rio");
+  // private final TalonFX m_test_motor2 = new TalonFX(2, "rio");
+  // private final TalonFX m_test_motor3 = new TalonFX(3, "rio");
+  // private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
   //特性：请求制，需要一个request
-  private final VoltageOut m_test_motor_request = new VoltageOut(0.0);
+  private final MotionMagicVoltage m_test_motor_request = new MotionMagicVoltage(0.0);
 
   
   //实际控制
@@ -36,28 +35,33 @@ public class drive extends SubsystemBase {
   //withPosition能够将高级的控制请求和底层的位置控制建立联系
   //withvelocity能够将高级的控制请求和底层的速度控制建立联系
 
-  public void setmotorVoltage(double vol) {
-    m_test_motor.setControl(m_test_motor_request.withOutput(vol));
-    m_test_motor2.setControl(m_test_motor_request.withOutput(vol));
+  public void setmotorPosition(double vol) {
+    m_test_motor.setControl(m_test_motor_request.withPosition(vol));
+    // m_test_motor2.setControl(m_test_motor_request.withPosition(vol));
+
+  // public void setmotorPosition2(double vol) {
+  //   m_test_motor3.setControl(m_test_motor_request.withPosition(vol));
+  //   m_test_motor4.setControl(m_test_motor_request.withPosition(vol));
+
   }
 
-  public void setmotorVoltage2(double vol) {
-    m_test_motor3.setControl(m_test_motor_request.withOutput(vol));
-    m_test_motor4.setControl(m_test_motor_request.withOutput(vol));
-
-  }
-
-  public Command Motor_Voltage_command(double  voltage){
-    return run(()->{
-      setmotorVoltage(voltage); // Set the motor to move at 1000 units per second
+  public Command Motor_Position_command(double  position){
+    return runEnd(()->{
+      setmotorPosition(position); // Set the motor to move at 1000 units per second
+                   },
+    () -> {
+      setmotorPosition(0);
+    
     });
+  
+  
   }
 
-  public Command Motor_Voltage_command2(double  voltage){
-    return run(()->{
-      setmotorVoltage2(voltage); // Set the motor to move at 1000 units per second
-    });
-  }
+  // public Command Motor_Position_command2(double  position){
+  //   return run(()->{
+  //     setmotorPosition2(position); // Set the motor to move at 1000 units per second
+  //   });
+  // }
   public drive() {
 
     var motorEncoderConfigs = new CANcoderConfiguration();
@@ -67,26 +71,42 @@ public class drive extends SubsystemBase {
 
     var motorConfigs = new TalonFXConfiguration();
 
-    motorConfigs.Slot0.kS = 0.2;
+
+
+    //每个电机都需要的配置
+    motorConfigs.Slot0.kS = 0.14;   //slot 槽 一块区域
     motorConfigs.Slot0.kV = 0.0;
     motorConfigs.Slot0.kA = 0;
-    motorConfigs.Slot0.kP = 3;
+    motorConfigs.Slot0.kP = 10;
     motorConfigs.Slot0.kI = 0;
     motorConfigs.Slot0.kD = 0;
+
+  
+
+    //高级的控制方法才会用到的参数
     motorConfigs.MotionMagic.MotionMagicAcceleration = 100; // Acceleration is around 40 rps/s
     motorConfigs.MotionMagic.MotionMagicCruiseVelocity = 200; // Unlimited cruise velocity
     motorConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
     motorConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
     motorConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
 
+    //点击不受控制
+    //1.危险
+    //2.电机受到损坏
+
+
+    //voltage控制
+    //电压控制   --开环
+    //开环控制：敞开的系统，不准确，也不知道自己不准确
+    //闭环控制：闭合的系统，相对准确，不准确时自己知道，并且自己知道和目标之间的差距，调整自己接近目标状态
+
     m_test_motor.getConfigurator().apply(motorConfigs);
-    m_test_motor2.getConfigurator().apply(motorConfigs);
-    m_test_motor3.getConfigurator().apply(motorConfigs);
-    m_test_motor4.getConfigurator().apply(motorConfigs);
+    // m_test_motor2.getConfigurator().apply(motorConfigs);
+    // m_test_motor3.getConfigurator().apply(motorConfigs);
+    // m_test_motor4.getConfigurator().apply(motorConfigs);
   }
-
-
 }
+
 
 
 //subsystem：
@@ -124,3 +144,37 @@ public class drive extends SubsystemBase {
 ////受限于电脑当时的情况或者配置
 //periodic()：每隔20毫秒循环一次
 //periodic()：检查仪一下的视觉检测效果，那我就可以在periodic里面写一个for和whlie
+
+
+//电机不受控制
+//1.危险
+//2.电机受到损坏
+
+//电机参数调试方法:{
+
+
+//将所有增益设置为零。
+
+//确定是否使用电梯或手臂。Kg
+//Kg:克服重力的参数，从零开始逐渐增加，知道把手松开电梯不会下坠位置
+
+//为您的闭环类型选择适当的静态前馈符号。
+//如果是速度控制，就用velocitysign,位置控制就用positionSign
+
+//增加直到电机移动之前。Ks
+//Ks：逐步增加直到电机处于临界平衡状态
+
+//如果使用速度设定点，请增加速度，直到输出速度与速度设定点紧密匹配。Kv
+//如果你用速度控制并且需要设定速度到某个值，可以逐步增加知道你的速度达到设定值
+//Kv是一个放大系数，单给们的速度不够时，用这个来提高速度使其达到设定值
+
+//增加直到输出开始在设定点附近振荡。Kp
+//逐步增加Kp值直到我的当前的位置开始在设定位置附近振荡，取他的前一个值
+
+//尽可能增加，不要给响应带来抖动。Kd
+//逐步增加Kd直到引入了新的震动，取他的前一个值
+
+//Kp决定了电机的力量大还是小
+//Kp要尽可能的大，但不能震颤
+//Ki一般不用
+//}
