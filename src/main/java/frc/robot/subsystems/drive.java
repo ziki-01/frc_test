@@ -25,9 +25,7 @@ public class drive extends SubsystemBase {
   private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
   //特性：请求制，需要一个request
   private final VoltageOut m_test_motor_request = new VoltageOut(0.0);
-  private final VoltageOut m_test_motor2_request = new VoltageOut(0.0);
-  private final VoltageOut m_test_motor3_request = new VoltageOut(0.0);
-  private final VoltageOut m_test_motor4_request = new VoltageOut(0.0);
+
   
   //实际控制
   //封装出来的方法
@@ -40,12 +38,12 @@ public class drive extends SubsystemBase {
 
   public void setmotorVoltage(double vol) {
     m_test_motor.setControl(m_test_motor_request.withOutput(vol));
-    m_test_motor2.setControl(m_test_motor2_request.withOutput(vol));
+    m_test_motor2.setControl(m_test_motor_request.withOutput(vol));
   }
 
   public void setmotorVoltage2(double vol) {
-    m_test_motor3.setControl(m_test_motor3_request.withOutput(vol));
-    m_test_motor4.setControl(m_test_motor4_request.withOutput(vol));
+    m_test_motor3.setControl(m_test_motor_request.withOutput(vol));
+    m_test_motor4.setControl(m_test_motor_request.withOutput(vol));
 
   }
 
