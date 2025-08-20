@@ -19,6 +19,6 @@ public final class Constants {
 
 
   public final class Candle{
-    public static final int CANdleID = 1;
+    public static final int CANdleID = 2;
   }
 }

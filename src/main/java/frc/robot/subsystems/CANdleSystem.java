@@ -127,6 +127,7 @@ public class CANdleSystem extends SubsystemBase {    //属性
     public void setFire() {
         m_toAnimate = new FireAnimation(0.5, 0.7, LedCount, 0.7, 0.5);
     }
+    
 
     public void FirewithMotor(){
         m_toAnimate = new FireAnimation(0.5, 0.7, LedCount, 0.7, 0.5);
@@ -134,6 +135,10 @@ public class CANdleSystem extends SubsystemBase {    //属性
 
     public void setColorFlow() {
         m_toAnimate = new ColorFlowAnimation(128, 20, 70, 0, 0.7, LedCount, Direction.Forward);
+    }
+
+    public void RainbowafterMotor(){
+        m_toAnimate = new RainbowAnimation(1, 0.1, LedCount);
     }
 
     /* Wrappers so we can access the CANdle from the subsystem */
@@ -207,14 +212,14 @@ public class CANdleSystem extends SubsystemBase {    //属性
     }
 
     public Command MattisGay(){
-        return run(()->{
+        return runOnce(()->{
         FirewithMotor(); // Set the motor to move at 1000 units per second
         });
       }
 
       public Command ZikiisGay(){
-        return run(()->{
-        setOff(); // Set the motor to move at 1000 units per second
+        return runOnce(()->{
+        RainbowafterMotor(); // Set the motor to move at 1000 units per second
         });
       }
 

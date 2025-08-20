@@ -65,11 +65,15 @@ public class RobotContainer {
 
 
 
-    m_driverController.x().onTrue(m_driveSubsystem.Motor_Move_MotionMagicVoltage(50).andThen(m_CANdleSystem.MattisGay()));
+    m_driverController.x().onTrue(m_driveSubsystem.Motor_Move_MotionMagicVoltage(50,10)
+                          .andThen(m_driveSubsystem.Motor_stop())
+                          // .alongWith(m_driveSubsystem.Motor_Move_VelocityTorqueCurrentFOC(10))
+                          .andThen(m_CANdleSystem.MattisGay()));
 
-    m_driverController.y().onTrue(m_driveSubsystem.Motor_Move_MotionMagicVoltage(0).andThen(m_CANdleSystem.ZikiisGay()));
-
-    m_driverController.a().onTrue(m_driveSubsystem.Motor_Move_MotionMagicVoltage1(10));
+    m_driverController.y().onTrue(m_driveSubsystem.Motor_Move_MotionMagicVoltage(0,-10)
+                          .andThen(m_driveSubsystem.Motor_stop())
+                          // .alongWith(m_driveSubsystem.Motor_Move_VelocityTorqueCurrentFOC(-10))
+                          .andThen(m_CANdleSystem.ZikiisGay()));
 
 
   

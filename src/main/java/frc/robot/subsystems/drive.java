@@ -23,8 +23,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 
 public class drive extends SubsystemBase {
-
-  private final CANcoder cancoder_fl = new CANcoder(1,"rio");
   
   // public static final Command Motor_Move_VelocityTorqueCurrentFOC = null;
   // //声明电机
@@ -45,32 +43,34 @@ public class drive extends SubsystemBase {
   // private final VelocityTorqueCurrentFOC m_test_motor_request4 = new VelocityTorqueCurrentFOC(0.0);
   // //电机控制：时间速度
 
+  private final CANcoder cancoder_fl = new CANcoder(3,"rio");
+  private final TalonFX m_test_motor = new TalonFX(5, "rio");
+  private final TalonFX m_test_motor2 = new TalonFX(6, "rio");
+
   // //withPosition：高级的控制请求和底层的逻辑进行连接
   // //withVelocity: 高级的控制请求和底层的逻辑进行连接
-  // public void setmotorVelocity(double velocity) {
-  //   m_test_motor.setControl(m_test_motor_request.withVelocity(velocity));
 
-  // }
-
-  public static final Command Motor_Move_MotionMagicVoltage = null;
-  //声明电机
-   private final TalonFX m_test_motor = new TalonFX(1, "rio");
 
   //请求制，需要一个request
   private final MotionMagicVoltage m_test_motor_request = new MotionMagicVoltage(0.0);
+  private final VelocityTorqueCurrentFOC m_test_motor_request2 = new VelocityTorqueCurrentFOC(0.0);
 
-  //记录预期的位置： 
-  private final double wantedvalue = 50;
-  private final double expected_error =1.0;
+  public void setmotorVelocity(double velocity) {
+    m_test_motor2.setControl(m_test_motor_request2.withVelocity(velocity));
 
-  //电机控制：时间速度
-
+  }
   //withPosition：高级的控制请求和底层的逻辑进行连接
   //withVelocity: 高级的控制请求和底层的逻辑进行连接
   public void setmotorPosition(double Position) {
     m_test_motor.setControl(m_test_motor_request.withPosition(Position));
 
   }
+
+  //记录预期的位置： 
+  private final double wantedvalue = 50;
+  private final double expected_error =1.0;
+
+  //电机控制：时间速度
 
 
   //实际控制
@@ -84,8 +84,6 @@ public class drive extends SubsystemBase {
       cancoder_fl.getConfigurator().apply(motorEncoderConfigs);
       
 
-
-
       var motorConfigs = new TalonFXConfiguration();
 
       //每个电机都有的固定参数        
@@ -97,16 +95,7 @@ public class drive extends SubsystemBase {
       motorConfigs.Slot0.kD = 0;
       motorConfigs.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
       motorConfigs.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseClosedLoopSign;
-      motorConfigs.Feedback.RotorToSensorRatio = 13;
 
-      // motorConfigs.Slot0.kS = 1.85;
-      // motorConfigs.Slot0.kV = 0.0;
-      // motorConfigs.Slot0.kA = 0;             
-      // motorConfigs.Slot0.kP = 6;
-      // motorConfigs.Slot0.kI = 0;
-      // motorConfigs.Slot0.kD = 0.1;
-      // motorConfigs.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
-      // motorConfigs.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseVelocitySign;
 
       //高级控制才用到下面的参数
       motorConfigs.MotionMagic.MotionMagicAcceleration = 100; // Acceleration is around 40 rps/s
@@ -118,24 +107,37 @@ public class drive extends SubsystemBase {
 //slot → 槽   一块区域 id：0
 
 
+      //第二套
+
+      var motorConfigs1 = new TalonFXConfiguration();
+
+      motorConfigs1.Slot0.kS = 1.85;
+      motorConfigs1.Slot0.kV = 0.0;
+      motorConfigs1.Slot0.kA = 0;             
+      motorConfigs1.Slot0.kP = 6;
+      motorConfigs1.Slot0.kI = 0;
+      motorConfigs1.Slot0.kD = 0.1;
+      motorConfigs1.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+      motorConfigs1.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseVelocitySign;
+      //高级控制才用到下面的参数
+      motorConfigs1.MotionMagic.MotionMagicAcceleration = 100; // Acceleration is around 40 rps/s
+      motorConfigs1.MotionMagic.MotionMagicCruiseVelocity = 200; // Unlimited cruise velocity
+      motorConfigs1.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
+      motorConfigs1.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
+      motorConfigs1.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0'     
     
+
+
       //少了一环：电机和CANcoder建立联系
       motorConfigs.Feedback.FeedbackRemoteSensorID = cancoder_fl.getDeviceID();
       motorConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
-      
-
-      
-
+      motorConfigs.Feedback.RotorToSensorRatio = 13;
 
       m_test_motor.getConfigurator().apply(motorConfigs);
-      // m_test_motor2.getConfigurator().apply(motorConfigs);
+      m_test_motor2.getConfigurator().apply(motorConfigs1);
       // m_test_motor3.getConfigurator().apply(motorConfigs);
       // m_test_motor4.getConfigurator().apply(motorConfigs);
 
-
-
-      
-      //少了一环：电机和cancoder建立联系
       
 
   }
@@ -172,21 +174,32 @@ public class drive extends SubsystemBase {
 //2.
 
 
+  // //直驱
+  // public Command Motor_Move_VelocityTorqueCurrentFOC (double Velocity){
+  //   return run(()->{
+  //                     setmotorVelocity(Velocity); // Set the motor to move at 1000 units per second
+  //                 })
+  //                 .until(()->{
+  //                               return (Math.abs(m_test_motor.getPosition().getValueAsDouble()-wantedvalue) < expected_error);
+  //                            });
+  // }
 
-  public Command Motor_Move_MotionMagicVoltage1(double Position){
-    return runOnce(()->{
-      setmotorPosition(Position); // Set the motor to move at 1000 units per second
-    });
+  //转向
+  public Command Motor_Move_MotionMagicVoltage (double Position,double velocity){
+    return run(()->{
+                      setmotorPosition(Position); // Set the motor to move at 1000 units per second
+                      setmotorVelocity(velocity);
+                  })
+                  .until(()->{
+                                return (Math.abs(m_test_motor.getPosition().getValueAsDouble()-Position) < expected_error);
+                             });
   }
 
 
-  public Command Motor_Move_MotionMagicVoltage (double Position){
-    return run(()->{
-                      setmotorPosition(Position); // Set the motor to move at 1000 units per second
-                  })
-                  .until(()->{
-                                return (Math.abs(m_test_motor.getPosition().getValueAsDouble()-wantedvalue) < expected_error);
-                             });
+  public Command Motor_stop (){
+    return runOnce(()->{
+                      setmotorVelocity(0);
+                  });
   }
 
   /**andthen()
