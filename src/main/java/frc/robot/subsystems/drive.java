@@ -9,7 +9,9 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.units.measure.Velocity;
@@ -20,10 +22,11 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 //基类：
 public class drive extends SubsystemBase {
   //声明电机
-  private final TalonFX m_test_motor = new TalonFX(1, "rio");
+  private final TalonFX m_test_motor = new TalonFX(5, "rio");
   // private final TalonFX m_test_motor2 = new TalonFX(2, "rio");
   // private final TalonFX m_test_motor3 = new TalonFX(3, "rio");
   // private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
+  private final CANcoder cancoder_fl = new CANcoder(3, "rio");
   //特性：请求制，需要一个request
   private final MotionMagicVoltage m_test_motor_request = new MotionMagicVoltage(0.0);
 
@@ -53,7 +56,26 @@ public class drive extends SubsystemBase {
                    });
     
     }
-  
+
+    double motorPosition = 0.0; // Current position of the motor
+    double targetPosition = 0.0; // Target position for the motor
+    double acceptableError = 0.2; // Acceptable error range for position control
+    public boolean IsAtPosition(){
+      motorPosition = m_test_motor.getPosition().getValueAsDouble(); // Get the current position of the motor
+
+      if(Math.abs(motorPosition - targetPosition) <= acceptableError) {
+        return true; // The motor is within the acceptable error range of the target position
+      } else {
+        return false; // The motor is not at the target position
+      }
+    }
+
+    public Command SetMottorPosition(int position){
+      return run(()->{
+        targetPosition = position; // Update the target position
+        setmotorPosition(targetPosition); // Command the motor to move to the target position
+      }).until(()->IsAtPosition());
+    }
   
   
 
@@ -68,8 +90,10 @@ public class drive extends SubsystemBase {
     motorEncoderConfigs.MagnetSensor.MagnetOffset=0.0;//offset
     motorEncoderConfigs.MagnetSensor.AbsoluteSensorDiscontinuityPoint=0.5;
     motorEncoderConfigs.MagnetSensor.SensorDirection=SensorDirectionValue.Clockwise_Positive;
+    cancoder_fl.getConfigurator().apply(motorEncoderConfigs);
 
     var motorConfigs = new TalonFXConfiguration();
+    motorConfigs.Feedback.RotorToSensorRatio = 13;
 
 
 
@@ -89,6 +113,12 @@ public class drive extends SubsystemBase {
     motorConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
     motorConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
     motorConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
+
+
+
+
+    motorConfigs.Feedback.FeedbackRemoteSensorID = cancoder_fl.getDeviceID();
+    motorConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
 
     //点击不受控制
     //1.危险
