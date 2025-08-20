@@ -4,14 +4,19 @@
 
 package frc.robot;
 
+import org.ejml.dense.block.MatrixMult_FDRB;
+
+import com.ctre.phoenix.led.CANdle;
+
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.Candle;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.subsystems.CANdleSystem;
 // import frc.robot.commands.Autos;
 // import frc.robot.commands.ExampleCommand;
 // import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.drive;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -22,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final drive m_drive_subsystenm = new drive();
+  private final CANdleSystem m_candle_subsystenm = new CANdleSystem();
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
@@ -52,7 +58,8 @@ public class RobotContainer {
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
     // m_driverController.b().whileTrue(m_drive_subsystenm.Motor_Position_command(0));
-    m_driverController.a().whileTrue(m_drive_subsystenm.Motor_Velocity_command(50));
+    m_driverController.a().onTrue(m_drive_subsystenm.Motor_Position_command(0).andThen(m_candle_subsystenm.candle1()));
+    m_driverController.b().onTrue(m_drive_subsystenm.Motor_Position_command(50).andThen(m_candle_subsystenm.candle2()));
     // m_driverController.x().whileTrue(m_drive_subsystenm.Motor_Position_command2(2));
     // m_driverController.x().whileFalse(m_drive_subsystenm.Motor_Position_command2(0));
   }
