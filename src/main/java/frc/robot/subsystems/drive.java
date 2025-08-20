@@ -9,7 +9,9 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.Led1OffColorValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
@@ -30,6 +32,8 @@ public class drive extends SubsystemBase {
   // private final MotionMagicVoltage m_test_motor2_request = new MotionMagicVoltage(0.0);
   // private final MotionMagicVoltage m_test_motor3_request = new MotionMagicVoltage(0.0);
   // private final MotionMagicVoltage m_test_motor4_request = new MotionMagicVoltage(0.0);
+
+  private final CANcoder cancoder_fl = new CANcoder(1, "rio");
   
   //实际控制
   //封装出来的方法
@@ -57,10 +61,15 @@ public class drive extends SubsystemBase {
   //   });
   // }
 
+  // poblic boolean isAtposition(){
+  //   current_position = motor_l.getPosition().gtValucAxDouble();
+  //   reture (Math.abs(expected_position-current_position))
+  // }
+
   public Command Motor_Position_command(double  Position){
     return runOnce(()->{
-                      setmotorPosition(Position); // Set the motor to move at 1000 units per second
-                      });
+      setmotorPosition(Position); // Set the motor to move at 1000 units per second
+    });
   }
 
   public drive() {
@@ -69,8 +78,10 @@ public class drive extends SubsystemBase {
     motorEncoderConfigs.MagnetSensor.MagnetOffset=0.0;//offset
     motorEncoderConfigs.MagnetSensor.AbsoluteSensorDiscontinuityPoint=0.5;
     motorEncoderConfigs.MagnetSensor.SensorDirection=SensorDirectionValue.Clockwise_Positive;
+    cancoder_fl.getConfigurator().apply(motorEncoderConfigs);
 
     var motorConfigs = new TalonFXConfiguration();
+    motorConfigs.Feedback.RotorToSensorRatio = 13;
 
     motorConfigs.Slot0.kS = 0.2;
     motorConfigs.Slot0.kV = 0.0;
@@ -109,6 +120,9 @@ public class drive extends SubsystemBase {
     motorConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
     motorConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
 
+    motorConfigs.Feedback.FeedbackRemoteSensorID = cancoder_fl.getDeviceID();
+    motorConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+
     m_test_motor.getConfigurator().apply(motorConfigs);
     // m_test_motor2.getConfigurator().apply(motorConfigs);
     // m_test_motor3.getConfigurator().apply(motorConfigs);
@@ -118,13 +132,10 @@ public class drive extends SubsystemBase {
 
 }
 
-
 //subsystem：
 //控制机器人
 
 //把所有部分的控制全部写在一起，全部写在一起没法调试某一部分的功能
-
-//假设我的底盘是正常的，底盘的控制程序就不需要改，只需要改其他的部分
 
 //什么叫做子系统：主程序（整个机器人） → 子系统（机器人的的某个部分）
 
