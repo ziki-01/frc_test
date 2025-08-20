@@ -20,12 +20,12 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 //基类：
 public class drive extends SubsystemBase {
   //声明电机
-  private final TalonFX m_test_motor = new TalonFX(11, "rio");
+  private final TalonFX m_test_motor = new TalonFX(1, "rio");
   // private final TalonFX m_test_motor2 = new TalonFX(2, "rio");
   // private final TalonFX m_test_motor3 = new TalonFX(3, "rio");
   // private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
   //特性：请求制，需要一个request
-  private final VelocityTorqueCurrentFOC m_test_motor_request = new VelocityTorqueCurrentFOC(0.0);
+  private final MotionMagicVoltage m_test_motor_request = new MotionMagicVoltage(0.0);
 
   
   //实际控制
@@ -37,8 +37,8 @@ public class drive extends SubsystemBase {
   //withPosition能够将高级的控制请求和底层的位置控制建立联系
   //withvelocity能够将高级的控制请求和底层的速度控制建立联系
 
-  public void setmotorVelocity(double vol) {
-    m_test_motor.setControl(m_test_motor_request.withVelocity(vol));
+  public void setmotorPosition(double vol) {
+    m_test_motor.setControl(m_test_motor_request.withPosition(vol));
     // m_test_motor2.setControl(m_test_motor_request.withPosition(vol));
 
   // public void setmotorPosition2(double vol) {
@@ -47,17 +47,15 @@ public class drive extends SubsystemBase {
 
   }
 
-  public Command Motor_Velocity_command(double  velocity){
-    return runEnd(()->{
-      setmotorVelocity(velocity); // Set the motor to move at 1000 units per second
-                   },
-    () -> {
-      setmotorVelocity(0);
+  public Command Motor_Position_command(double  position){
+    return runOnce(()->{
+      setmotorPosition(position); // Set the motor to move at 1000 units per second
+                   });
     
-    });
+    }
   
   
-  }
+  
 
   // public Command Motor_Position_command2(double  position){
   //   return run(()->{
@@ -76,12 +74,12 @@ public class drive extends SubsystemBase {
 
 
     //每个电机都需要的配置
-    motorConfigs.Slot0.kS = 1.5;   //slot 槽 一块区域
+    motorConfigs.Slot0.kS = 0.15;   //slot 槽 一块区域
     motorConfigs.Slot0.kV = 0.0;
     motorConfigs.Slot0.kA = 0;
-    motorConfigs.Slot0.kP = 7;
+    motorConfigs.Slot0.kP = 3;
     motorConfigs.Slot0.kI = 0;
-    motorConfigs.Slot0.kD = 0.1;
+    motorConfigs.Slot0.kD = 0;
 
   
 

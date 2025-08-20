@@ -16,4 +16,7 @@ public final class Constants {
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
   }
+  public static final class Candle {
+    public static final int CANdleID = 2; // Replace with your actual CANdle ID
+  }
 }
