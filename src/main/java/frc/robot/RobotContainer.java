@@ -5,6 +5,7 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.subsystems.CANdleSystem;
 //import frc.robot.commands.Autos;
 //import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.drive;
@@ -23,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final drive m_driveSubsystem = new drive();
+  private final CANdleSystem m_CANdleSystem = new CANdleSystem();
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
@@ -63,8 +65,11 @@ public class RobotContainer {
 
 
 
-    m_driverController.a().whileTrue(m_driveSubsystem.Motor_Velocity_withRunend(10));
+    m_driverController.x().onTrue(m_driveSubsystem.Motor_Move_MotionMagicVoltage(50).andThen(m_CANdleSystem.MattisGay()));
 
+    m_driverController.y().onTrue(m_driveSubsystem.Motor_Move_MotionMagicVoltage(0).andThen(m_CANdleSystem.ZikiisGay()));
+
+    m_driverController.a().onTrue(m_driveSubsystem.Motor_Move_MotionMagicVoltage1(10));
 
 
   

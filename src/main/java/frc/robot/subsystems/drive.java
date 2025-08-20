@@ -4,14 +4,18 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 //Voltage Out 不受PID影响
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
+import com.ctre.phoenix6.hardware.CANcoder;
 
 import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -19,61 +23,90 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 
 public class drive extends SubsystemBase {
-  public static final Command Motor_Move_VelocityTorqueCurrentFOC = null;
+
+  private final CANcoder cancoder_fl = new CANcoder(1,"rio");
+  
+  // public static final Command Motor_Move_VelocityTorqueCurrentFOC = null;
+  // //声明电机
+  //  private final TalonFX m_test_motor = new TalonFX(1, "rio");
+
+  //  private final TalonFX m_test_motor2 = new TalonFX(2, "rio");
+
+  //  private final TalonFX m_test_motor3 = new TalonFX(3, "rio");
+
+  //  private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
+  // //请求制，需要一个request
+  // private final VelocityTorqueCurrentFOC m_test_motor_request = new VelocityTorqueCurrentFOC(0.0);
+
+  // private final VelocityTorqueCurrentFOC m_test_motor_request2 = new VelocityTorqueCurrentFOC(0.0);
+  
+  // private final VelocityTorqueCurrentFOC m_test_motor_request3 = new VelocityTorqueCurrentFOC(0.0);
+
+  // private final VelocityTorqueCurrentFOC m_test_motor_request4 = new VelocityTorqueCurrentFOC(0.0);
+  // //电机控制：时间速度
+
+  // //withPosition：高级的控制请求和底层的逻辑进行连接
+  // //withVelocity: 高级的控制请求和底层的逻辑进行连接
+  // public void setmotorVelocity(double velocity) {
+  //   m_test_motor.setControl(m_test_motor_request.withVelocity(velocity));
+
+  // }
+
+  public static final Command Motor_Move_MotionMagicVoltage = null;
   //声明电机
    private final TalonFX m_test_motor = new TalonFX(1, "rio");
 
-   private final TalonFX m_test_motor2 = new TalonFX(2, "rio");
-
-   private final TalonFX m_test_motor3 = new TalonFX(3, "rio");
-
-   private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
   //请求制，需要一个request
-  private final VelocityTorqueCurrentFOC m_test_motor_request = new VelocityTorqueCurrentFOC(0.0);
+  private final MotionMagicVoltage m_test_motor_request = new MotionMagicVoltage(0.0);
 
-  private final VelocityTorqueCurrentFOC m_test_motor_request2 = new VelocityTorqueCurrentFOC(0.0);
-  
-  private final VelocityTorqueCurrentFOC m_test_motor_request3 = new VelocityTorqueCurrentFOC(0.0);
+  //记录预期的位置： 
+  private final double wantedvalue = 50;
+  private final double expected_error =1.0;
 
-  private final VelocityTorqueCurrentFOC m_test_motor_request4 = new VelocityTorqueCurrentFOC(0.0);
   //电机控制：时间速度
 
   //withPosition：高级的控制请求和底层的逻辑进行连接
   //withVelocity: 高级的控制请求和底层的逻辑进行连接
-  public void setmotorVelocity(double velocity) {
-    m_test_motor.setControl(m_test_motor_request.withVelocity(velocity));
+  public void setmotorPosition(double Position) {
+    m_test_motor.setControl(m_test_motor_request.withPosition(Position));
 
-  }
-
-  public void setmotorVelocity2(double velocity) {
-    m_test_motor3.setControl(m_test_motor_request3.withVelocity(velocity));
-    m_test_motor4.setControl(m_test_motor_request4.withVelocity(velocity));
   }
 
 
   //实际控制
   /** Creates a new ExampleSubsystem. */
   public drive() {
+
+      var motorEncoderConfigs = new CANcoderConfiguration();
+      motorEncoderConfigs.MagnetSensor.MagnetOffset=0.0;
+      motorEncoderConfigs.MagnetSensor.AbsoluteSensorDiscontinuityPoint=0.5;//实际生活中的电机位置映射到什么范围
+      motorEncoderConfigs.MagnetSensor.SensorDirection=SensorDirectionValue.Clockwise_Positive;
+      cancoder_fl.getConfigurator().apply(motorEncoderConfigs);
+      
+
+
+
       var motorConfigs = new TalonFXConfiguration();
 
       //每个电机都有的固定参数        
-      // motorConfigs.Slot0.kS = 0.14;
-      // motorConfigs.Slot0.kV = 0.0;            直接控制
-      // motorConfigs.Slot0.kA = 0;
-      // motorConfigs.Slot0.kP = 10;
-      // motorConfigs.Slot0.kI = 0;
-      // motorConfigs.Slot0.kD = 0;
-      // motorConfigs.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
-      // motorConfigs.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseClosedLoopSign;
-
-      motorConfigs.Slot0.kS = 1.85;
-      motorConfigs.Slot0.kV = 0.0;
-      motorConfigs.Slot0.kA = 0;             //FOC
-      motorConfigs.Slot0.kP = 6;
+      motorConfigs.Slot0.kS = 0.14;
+      motorConfigs.Slot0.kV = 0.0;            //直接控制
+      motorConfigs.Slot0.kA = 0;
+      motorConfigs.Slot0.kP = 10;
       motorConfigs.Slot0.kI = 0;
-      motorConfigs.Slot0.kD = 0.1;
+      motorConfigs.Slot0.kD = 0;
       motorConfigs.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
-      motorConfigs.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseVelocitySign;
+      motorConfigs.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseClosedLoopSign;
+      motorConfigs.Feedback.RotorToSensorRatio = 13;
+
+      // motorConfigs.Slot0.kS = 1.85;
+      // motorConfigs.Slot0.kV = 0.0;
+      // motorConfigs.Slot0.kA = 0;             
+      // motorConfigs.Slot0.kP = 6;
+      // motorConfigs.Slot0.kI = 0;
+      // motorConfigs.Slot0.kD = 0.1;
+      // motorConfigs.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+      // motorConfigs.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseVelocitySign;
 
       //高级控制才用到下面的参数
       motorConfigs.MotionMagic.MotionMagicAcceleration = 100; // Acceleration is around 40 rps/s
@@ -84,10 +117,27 @@ public class drive extends SubsystemBase {
 // 电机的配置参数 ： kS kV kA kP kI kD MotionMagicAcceleration MotionMagicCruiseVelocity MotionMagicExpo_kV MotionMagicExpo_kA MotionMagicJerk
 //slot → 槽   一块区域 id：0
 
+
+    
+      //少了一环：电机和CANcoder建立联系
+      motorConfigs.Feedback.FeedbackRemoteSensorID = cancoder_fl.getDeviceID();
+      motorConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+      
+
+      
+
+
       m_test_motor.getConfigurator().apply(motorConfigs);
-      m_test_motor2.getConfigurator().apply(motorConfigs);
-      m_test_motor3.getConfigurator().apply(motorConfigs);
-      m_test_motor4.getConfigurator().apply(motorConfigs);
+      // m_test_motor2.getConfigurator().apply(motorConfigs);
+      // m_test_motor3.getConfigurator().apply(motorConfigs);
+      // m_test_motor4.getConfigurator().apply(motorConfigs);
+
+
+
+      
+      //少了一环：电机和cancoder建立联系
+      
+
   }
 
 
@@ -121,26 +171,44 @@ public class drive extends SubsystemBase {
 //1.不安全    →   电机不受控
 //2.
 
-  public Command Motor_Move_Velocity(double velocity){
-    return run(()->{
-      setmotorVelocity(velocity); // Set the motor to move at 1000 units per second
+
+
+  public Command Motor_Move_MotionMagicVoltage1(double Position){
+    return runOnce(()->{
+      setmotorPosition(Position); // Set the motor to move at 1000 units per second
     });
   }
 
-  public Command Motor_Move_Velocity2(double velocity){
+
+  public Command Motor_Move_MotionMagicVoltage (double Position){
     return run(()->{
-      setmotorVelocity2(velocity); // Set the motor to move at 1000 units per second
-    });
+                      setmotorPosition(Position); // Set the motor to move at 1000 units per second
+                  })
+                  .until(()->{
+                                return (Math.abs(m_test_motor.getPosition().getValueAsDouble()-wantedvalue) < expected_error);
+                             });
   }
 
-  public Command Motor_Velocity_withRunend(double velocity){
-    return runEnd(()->{
-      setmotorVelocity(velocity);
-    },
-    ()->{
-      setmotorVelocity(0);
-    });
-  }
+  /**andthen()
+   * until()
+   * run()
+   * runonce()
+   * runend
+   * 
+   * 小的一步步组成，复杂的
+   * 
+   * whileTrue
+   * onTrue
+  */
+
+  // public Command Motor_Velocity_withRunend(double velocity){
+  //   return runEnd(()->{
+  //     setmotorVelocity(velocity);
+  //   },
+  //   ()->{
+  //     setmotorVelocity(0);
+  //   });
+  // }
 
   /**
    * An example method querying a boolean state of the subsystem (for example, a digital sensor).
