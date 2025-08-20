@@ -132,6 +132,12 @@ public class CANdleSystem extends SubsystemBase {    //属性
         });
         
     }
+    public Command setTwinkle() {
+        return run(() -> {
+            m_toAnimate = new TwinkleAnimation(30, 70, 60, 0, 0.4, LedCount, TwinklePercent.Percent6);
+        });
+        
+    }
 
     public void FirewithMotor(){
         m_toAnimate = new FireAnimation(0.5, 0.7, LedCount, 0.7, 0.5);
