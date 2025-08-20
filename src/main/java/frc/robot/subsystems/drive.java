@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.Led1OffColorValue;
@@ -25,7 +26,7 @@ public class drive extends SubsystemBase {
   // private final TalonFX m_test_motor3 = new TalonFX(3, "rio");
   // private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
   //特性：请求制，需要一个request
-  private final MotionMagicVoltage m_test_motor_request = new MotionMagicVoltage(0.0);
+  private final VelocityTorqueCurrentFOC m_test_motor_request = new VelocityTorqueCurrentFOC(0.0);
   // private final MotionMagicVoltage m_test_motor2_request = new MotionMagicVoltage(0.0);
   // private final MotionMagicVoltage m_test_motor3_request = new MotionMagicVoltage(0.0);
   // private final MotionMagicVoltage m_test_motor4_request = new MotionMagicVoltage(0.0);
@@ -39,8 +40,8 @@ public class drive extends SubsystemBase {
   //withPosition能够将高级的控制请求和底层的位置控制建立联系
   //withvelocity能够将高级的控制请求和底层的速度控制建立联系
 
-  public void setmotorPosition(double vol) {
-    m_test_motor.setControl(m_test_motor_request.withPosition(vol));
+  public void setmotorVelocity(double vol) {
+    m_test_motor.setControl(m_test_motor_request.withVelocity(vol));
     // m_test_motor2.setControl(m_test_motor2_request.withPosition(vol));
   }
 
@@ -56,12 +57,12 @@ public class drive extends SubsystemBase {
   //   });
   // }
 
-  public Command Motor_Position_command(double  Position){
+  public Command Motor_Velocity_command(double  Velocity){
     return runEnd(()->{
-                      setmotorPosition(Position); // Set the motor to move at 1000 units per second
+                      setmotorVelocity(Velocity); // Set the motor to move at 1000 units per second
                       },
                   ()->{
-                    setmotorPosition(0);
+                    setmotorVelocity(0);
                   });
   }
 
@@ -74,12 +75,12 @@ public class drive extends SubsystemBase {
 
     var motorConfigs = new TalonFXConfiguration();
 
-    motorConfigs.Slot0.kS = 0.2;
+    motorConfigs.Slot0.kS = 1.5;
     motorConfigs.Slot0.kV = 0.0;
     motorConfigs.Slot0.kA = 0;
-    motorConfigs.Slot0.kP = 3;
+    motorConfigs.Slot0.kP = 7;
     motorConfigs.Slot0.kI = 0;
-    motorConfigs.Slot0.kD = 0;
+    motorConfigs.Slot0.kD = 0.1;
 
     // 手动调整通常遵循以下过程：
 
