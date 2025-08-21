@@ -19,4 +19,11 @@ public final class Constants {
   public static final class Candle {
     public static final int CANdleID = 2; // Replace with your actual CANdle ID
   }
+  public static class Motor{
+    public static final int motorid_1 = 1;
+    public static final int motorid_2 = 2;
+  }
+  public static class CANcoder{
+    public static final int cancoderid_1 = 3;
+  }
 }
