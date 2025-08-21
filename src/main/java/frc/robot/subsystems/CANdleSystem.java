@@ -31,7 +31,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class CANdleSystem extends SubsystemBase {
-    private final CANdle m_candle = new CANdle(Constants.Candle.CANdleID, "rio");
+    private final CANdle m_candle = new CANdle(Constants.Candle.candle1_id, "rio");
     private final int LedCount = 300;//灯珠数量，设备比较小，有可能灯带至亮一半
 
     private Animation m_toAnimate = null;//要变换到新的状态
@@ -187,13 +187,13 @@ public class CANdleSystem extends SubsystemBase {
 
     public Command candle1(){
         return run(()->{
-        FirewithMotor(); // Set the motor to move at 1000 units per second
+            FirewithMotor(); // Set the motor to move at 1000 units per second
         });
     }
 
     public Command candle2(){
         return run(()->{
-        setOff(); // Set the motor to move at 1000 units per second
+            setColorFlow(); // Set the motor to move at 1000 units per second
         });
     }
     

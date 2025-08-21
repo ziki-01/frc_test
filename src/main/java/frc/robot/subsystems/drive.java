@@ -20,88 +20,20 @@ import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 
 //基类：
 public class drive extends SubsystemBase {
 
   //声明电机
-  private final TalonFX m_test_motor = new TalonFX(5, "rio");
-  private final TalonFX m_test_motor2 = new TalonFX(6, "rio");
-  // private final TalonFX m_test_motor3 = new TalonFX(3, "rio");
-  // private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
+  private final TalonFX m_test_motor1 = new TalonFX(Constants.Motor.motor1_id, "rio");
+  private final TalonFX m_test_motor2 = new TalonFX(Constants.Motor.motor2_id, "rio");
   //特性：请求制，需要一个request
-  private final MotionMagicVoltage m_test_motor_request = new MotionMagicVoltage(0.0);
+  private final MotionMagicVoltage m_test_motor1_request = new MotionMagicVoltage(0.0);
   private final VelocityTorqueCurrentFOC m_test_motor2_request = new VelocityTorqueCurrentFOC(0.0);
-  // private final MotionMagicVoltage m_test_motor3_request = new MotionMagicVoltage(0.0);
-  // private final MotionMagicVoltage m_test_motor4_request = new MotionMagicVoltage(0.0);
 
-  private final CANcoder cancoder_fl = new CANcoder(3, "rio");
-  
-  //实际控制
-  //封装出来的方法
-  //控制电机 1.控制电机位置
-  //        2.控制电机速度
-  //高级的控制方法  本质就是优化速度控制和位置控制
-
-  //withPosition能够将高级的控制请求和底层的位置控制建立联系
-  //withvelocity能够将高级的控制请求和底层的速度控制建立联系
-
-  public void setmotorPosition(double pos) {
-    m_test_motor.setControl(m_test_motor_request.withPosition(pos));
-    // m_test_motor2.setControl(m_test_motor2_request.withPosition(vol));
-  }
-
-  public void setmotorVelocity(double vol) {
-    m_test_motor2.setControl(m_test_motor2_request.withVelocity(vol));
-    // m_test_motor2.setControl(m_test_motor2_request.withPosition(vol));
-  }
-
-  // public void setmotorPosition2(double vol) {
-  //   m_test_motor3.setControl(m_test_motor3_request.withPosition(vol));
-  //   m_test_motor4.setControl(m_test_motor4_request.withPosition(vol));
-
-  // }
-
-  // public Command Motor_Position_command2(double  position){
-  //   return run(()->{
-  //     setmotorPosition2(position); // Set the motor to move at 1000 units per second
-  //   });
-  // }
-
-  // poblic boolean isAtposition(){
-  //   current_position = motor_l.getPosition().gtValucAxDouble();
-  //   reture (Math.abs(expected_position-current_position))
-  // }
-
-  double motorPosition = 0.0;
-  double targetPosition = 0.0;
-  double acceptableError = 0.2;
-
-  public boolean IsAtPosition(double Position){
-    motorPosition = m_test_motor.getPosition().getValueAsDouble(); // Get the current position of the motor
-
-    if(Math.abs(motorPosition - Position) <= acceptableError) {
-      return true; // The motor is within the acceptable error range of the target position
-    } else {
-      return false; // The motor is not at the target position
-    }
-  }
-
-  public Command Motor_Position_Velocity_command(double  Velocity,double  Position){
-    return run(()->{
-      setmotorPosition(Position); // Set the motor to move at 1000 units per second
-      setmotorVelocity(Velocity); 
-    }).until(() -> IsAtPosition(Position));
-  }
-
-  public Command Motor_Velocity_command(double  Velocity){
-    return runOnce(()->{
-      setmotorVelocity(Velocity);// Set the motor to move at 1000 units per second
-    });
-      
-    
-  }
+  private final CANcoder cancoder_fl = new CANcoder(Constants.Cancoder.cancoder1_id, "rio");
 
   public drive() {
 
@@ -143,12 +75,16 @@ public class drive extends SubsystemBase {
     motorConfigs.Slot0.kP = 3;
     motorConfigs.Slot0.kI = 0;
     motorConfigs.Slot0.kD = 0;
-
     motorConfigs.MotionMagic.MotionMagicAcceleration = 100; // Acceleration is around 40 rps/s
     motorConfigs.MotionMagic.MotionMagicCruiseVelocity = 200; // Unlimited cruise velocity
     motorConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
     motorConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
     motorConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
+
+    motorConfigs.Feedback.FeedbackRemoteSensorID = cancoder_fl.getDeviceID();
+    motorConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+
+    m_test_motor1.getConfigurator().apply(motorConfigs);
 
 
     var motorEncoderConfigs2 = new CANcoderConfiguration();
@@ -164,22 +100,73 @@ public class drive extends SubsystemBase {
     motorConfigs2.Slot0.kP = 7;
     motorConfigs2.Slot0.kI = 0;
     motorConfigs2.Slot0.kD = 0.1;
-
     motorConfigs2.MotionMagic.MotionMagicAcceleration = 100; // Acceleration is around 40 rps/s
     motorConfigs2.MotionMagic.MotionMagicCruiseVelocity = 200; // Unlimited cruise velocity
     motorConfigs2.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
     motorConfigs2.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
     motorConfigs2.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
 
-    motorConfigs.Feedback.FeedbackRemoteSensorID = cancoder_fl.getDeviceID();
-    motorConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
-
-    m_test_motor.getConfigurator().apply(motorConfigs);
     m_test_motor2.getConfigurator().apply(motorConfigs2);
 
     // m_test_motor2.getConfigurator().apply(motorConfigs);
     // m_test_motor3.getConfigurator().apply(motorConfigs);
     // m_test_motor4.getConfigurator().apply(motorConfigs);
+  }
+
+  public double getMotorPosition() {
+    return m_test_motor1.getPosition().getValueAsDouble();
+  }
+
+  //实际控制
+  //封装出来的方法
+  //控制电机 1.控制电机位置
+  //        2.控制电机速度
+  //高级的控制方法  本质就是优化速度控制和位置控制
+
+  //withPosition能够将高级的控制请求和底层的位置控制建立联系
+  //withvelocity能够将高级的控制请求和底层的速度控制建立联系
+
+  public void setmotorPosition(double pos) {
+    m_test_motor1.setControl(m_test_motor1_request.withPosition(pos));
+  }
+
+  public void setmotorVelocity(double vol) {
+    m_test_motor2.setControl(m_test_motor2_request.withVelocity(vol));
+  }
+
+
+  double motorPosition = 0.0;
+  double targetPosition = 0.0;
+  double acceptableError = 0.2;
+
+  public boolean IsAtPosition(double Position){
+    motorPosition = m_test_motor1.getPosition().getValueAsDouble(); // Get the current position of the motor
+
+    if(Math.abs(motorPosition - Position) <= acceptableError) {
+      return true; // The motor is within the acceptable error range of the target position
+    } else {
+      return false; // The motor is not at the target position
+    }
+  }
+
+  public Command Motor_Position_Velocity_command(double  Velocity,double  Position){
+    return run(()->{
+      setmotorPosition(Position); // Set the motor to move at 1000 units per second
+      setmotorVelocity(Velocity); 
+    })
+    .until(() -> IsAtPosition(Position))
+    .finallyDo(() -> {
+      setmotorVelocity(0);
+      setmotorPosition(getMotorPosition());
+    });
+  }
+
+  public Command Motor_Velocity_command(double  Velocity){
+    return runOnce(()->{
+      setmotorVelocity(Velocity);// Set the motor to move at 1000 units per second
+    });
+      
+    
   }
 
 

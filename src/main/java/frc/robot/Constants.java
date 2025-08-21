@@ -11,14 +11,24 @@ package frc.robot;
  *
  * <p>It is advised to statically import this class (or one of its inner classes) wherever the
  * constants are needed, to reduce verbosity.
- */
+*/
+
 public final class Constants {
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
   }
 
   public static final class Candle{
-    public static final int CANdleID = 2;
+    public static final int candle1_id = 2;
+  }
+
+  public static class Motor{
+    public static final int motor1_id = 1;
+    public static final int motor2_id = 2;
+  }
+
+  public static class Cancoder{
+    public static final int cancoder1_id = 1;
   }
   
 }
