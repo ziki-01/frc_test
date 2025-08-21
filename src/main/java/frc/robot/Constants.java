@@ -21,4 +21,23 @@ public final class Constants {
   public final class Candle{
     public static final int CANdleID = 2;
   }
+
+  public static class MOTOR{
+    public static final int MOTOR_1_ID = 5;
+    public static final int MOTOR_2_ID = 6;
+    public static final int CANCODER_1_ID = 3;
+
+    public static final double MOTOR_POSITION_1 = 50;//位置1
+    public static final double MOTOR_POSITION_2 = 0;//位置2 
+
+    public static final double MOTOR_VELOCITY_1 = 10;//速度1
+    public static final double MOTOR_VELOCITY_2 = -10;//速度2
+
+    public static final double expected_error =1.0;
+  
+    public static double wantedvalue = 50;
+    public static double current_position = 0;
+  
+  }
 }
+

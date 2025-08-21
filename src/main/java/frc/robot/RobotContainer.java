@@ -12,6 +12,7 @@ import frc.robot.subsystems.drive;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants;
 
 //包：功能包，负责某一类特定的功能
 
@@ -65,18 +66,13 @@ public class RobotContainer {
 
 
 
-    m_driverController.x().onTrue(m_driveSubsystem.Motor_Move_MotionMagicVoltage(50,10)
-                          .andThen(m_driveSubsystem.Motor_stop())
+    m_driverController.x().onTrue(m_driveSubsystem.Motor_Move_WithfinallyDo(Constants.MOTOR.MOTOR_POSITION_1,Constants.MOTOR.MOTOR_VELOCITY_1)
                           // .alongWith(m_driveSubsystem.Motor_Move_VelocityTorqueCurrentFOC(10))
                           .andThen(m_CANdleSystem.MattisGay()));
 
-    m_driverController.y().onTrue(m_driveSubsystem.Motor_Move_MotionMagicVoltage(0,-10)
-                          .andThen(m_driveSubsystem.Motor_stop())
+    m_driverController.y().onTrue(m_driveSubsystem.Motor_Move_WithfinallyDo(Constants.MOTOR.MOTOR_POSITION_2,Constants.MOTOR.MOTOR_VELOCITY_2)
                           // .alongWith(m_driveSubsystem.Motor_Move_VelocityTorqueCurrentFOC(-10))
                           .andThen(m_CANdleSystem.ZikiisGay()));
-
-
-  
   }
 
   /**

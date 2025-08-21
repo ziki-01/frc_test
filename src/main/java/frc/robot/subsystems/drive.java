@@ -20,6 +20,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 
 public class drive extends SubsystemBase {
@@ -33,6 +34,7 @@ public class drive extends SubsystemBase {
   //  private final TalonFX m_test_motor3 = new TalonFX(3, "rio");
 
   //  private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
+
   // //请求制，需要一个request
   // private final VelocityTorqueCurrentFOC m_test_motor_request = new VelocityTorqueCurrentFOC(0.0);
 
@@ -43,32 +45,26 @@ public class drive extends SubsystemBase {
   // private final VelocityTorqueCurrentFOC m_test_motor_request4 = new VelocityTorqueCurrentFOC(0.0);
   // //电机控制：时间速度
 
-  private final CANcoder cancoder_fl = new CANcoder(3,"rio");
-  private final TalonFX m_test_motor = new TalonFX(5, "rio");
-  private final TalonFX m_test_motor2 = new TalonFX(6, "rio");
 
-  // //withPosition：高级的控制请求和底层的逻辑进行连接
-  // //withVelocity: 高级的控制请求和底层的逻辑进行连接
+  //实例化
+  private final CANcoder cancoder_fl = new CANcoder(Constants.MOTOR.CANCODER_1_ID,"rio");
+  private final TalonFX m_test_motor = new TalonFX(Constants.MOTOR.MOTOR_2_ID, "rio");
+  private final TalonFX m_test_motor2 = new TalonFX(Constants.MOTOR.MOTOR_1_ID, "rio");
+
 
 
   //请求制，需要一个request
   private final MotionMagicVoltage m_test_motor_request = new MotionMagicVoltage(0.0);
   private final VelocityTorqueCurrentFOC m_test_motor_request2 = new VelocityTorqueCurrentFOC(0.0);
 
-  public void setmotorVelocity(double velocity) {
-    m_test_motor2.setControl(m_test_motor_request2.withVelocity(velocity));
-
-  }
   //withPosition：高级的控制请求和底层的逻辑进行连接
   //withVelocity: 高级的控制请求和底层的逻辑进行连接
+  public void setmotorVelocity(double velocity) {
+    m_test_motor2.setControl(m_test_motor_request2.withVelocity(velocity));
+  }
   public void setmotorPosition(double Position) {
     m_test_motor.setControl(m_test_motor_request.withPosition(Position));
-
   }
-
-  //记录预期的位置： 
-  private final double wantedvalue = 50;
-  private final double expected_error =1.0;
 
   //电机控制：时间速度
 
@@ -77,6 +73,7 @@ public class drive extends SubsystemBase {
   /** Creates a new ExampleSubsystem. */
   public drive() {
 
+      //CANcoder配置参数
       var motorEncoderConfigs = new CANcoderConfiguration();
       motorEncoderConfigs.MagnetSensor.MagnetOffset=0.0;
       motorEncoderConfigs.MagnetSensor.AbsoluteSensorDiscontinuityPoint=0.5;//实际生活中的电机位置映射到什么范围
@@ -84,8 +81,11 @@ public class drive extends SubsystemBase {
       cancoder_fl.getConfigurator().apply(motorEncoderConfigs);
       
 
-      var motorConfigs = new TalonFXConfiguration();
+      // 电机的配置参数 ： kS kV kA kP kI kD MotionMagicAcceleration MotionMagicCruiseVelocity MotionMagicExpo_kV MotionMagicExpo_kA MotionMagicJerk
+      //slot → 槽   一块区域 id：0
 
+                                              //第一套
+      var motorConfigs = new TalonFXConfiguration();
       //每个电机都有的固定参数        
       motorConfigs.Slot0.kS = 0.14;
       motorConfigs.Slot0.kV = 0.0;            //直接控制
@@ -95,22 +95,24 @@ public class drive extends SubsystemBase {
       motorConfigs.Slot0.kD = 0;
       motorConfigs.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
       motorConfigs.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseClosedLoopSign;
-
-
       //高级控制才用到下面的参数
       motorConfigs.MotionMagic.MotionMagicAcceleration = 100; // Acceleration is around 40 rps/s
       motorConfigs.MotionMagic.MotionMagicCruiseVelocity = 200; // Unlimited cruise velocity
       motorConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
       motorConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
       motorConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0'
-// 电机的配置参数 ： kS kV kA kP kI kD MotionMagicAcceleration MotionMagicCruiseVelocity MotionMagicExpo_kV MotionMagicExpo_kA MotionMagicJerk
-//slot → 槽   一块区域 id：0
 
+      //少了一环：电机和CANcoder建立联系
+      motorConfigs.Feedback.FeedbackRemoteSensorID = cancoder_fl.getDeviceID();
+      motorConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+      motorConfigs.Feedback.RotorToSensorRatio = 13;      
 
-      //第二套
+      //选择这套参数的电机
+      m_test_motor.getConfigurator().apply(motorConfigs);
 
+                                              //第二套
       var motorConfigs1 = new TalonFXConfiguration();
-
+      //每个电机都有的固定参数     
       motorConfigs1.Slot0.kS = 1.85;
       motorConfigs1.Slot0.kV = 0.0;
       motorConfigs1.Slot0.kA = 0;             
@@ -126,102 +128,76 @@ public class drive extends SubsystemBase {
       motorConfigs1.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
       motorConfigs1.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0'     
     
-
-
-      //少了一环：电机和CANcoder建立联系
-      motorConfigs.Feedback.FeedbackRemoteSensorID = cancoder_fl.getDeviceID();
-      motorConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
-      motorConfigs.Feedback.RotorToSensorRatio = 13;
-
-      m_test_motor.getConfigurator().apply(motorConfigs);
+      //选择这套参数的电机
       m_test_motor2.getConfigurator().apply(motorConfigs1);
-      // m_test_motor3.getConfigurator().apply(motorConfigs);
-      // m_test_motor4.getConfigurator().apply(motorConfigs);
 
-      
 
   }
 
-
-//Voltage_Out 原理：
-//假设最大输出电压是12v， 那么12v对应 1000r/min
-//6v                                500r/min
-//0v                                0r/min
-
-//开环控制：敞开的系统，他不准确，他也不知道自己准不准确，比较盲目
-//闭环控制：闭合的控制，相对准确，当他不准确的时候，他知道自己不准确，并且他自己知道他的状态和预期有差距
-//他就能根据这个差距，调整自己，然后接近我们的预期
-//闭环有一个反馈
-
-
-
-
-//想要控制速度到50
-//40-50-40-50-40-50   →    不稳定
-//想要控制位置到100
-//90-80-100-90-80-100    →    不稳定
-
-
-
-//想要控制速度到50
-//48-50-49-50-48-50    →   稳定
-//想要控制位置到100
-//100-98-97-100    →   稳定
-
-
-//电机不稳定
-//1.不安全    →   电机不受控
-//2.
-
-
-  // //直驱
-  // public Command Motor_Move_VelocityTorqueCurrentFOC (double Velocity){
-  //   return run(()->{
-  //                     setmotorVelocity(Velocity); // Set the motor to move at 1000 units per second
-  //                 })
-  //                 .until(()->{
-  //                               return (Math.abs(m_test_motor.getPosition().getValueAsDouble()-wantedvalue) < expected_error);
-  //                            });
-  // }
-
-  //转向
+  //单command控制两个不同移动模式的电机
   public Command Motor_Move_MotionMagicVoltage (double Position,double velocity){
     return run(()->{
                       setmotorPosition(Position); // Set the motor to move at 1000 units per second
                       setmotorVelocity(velocity);
                   })
                   .until(()->{
-                                return (Math.abs(m_test_motor.getPosition().getValueAsDouble()-Position) < expected_error);
+                                return (Math.abs(m_test_motor.getPosition().getValueAsDouble()-Position) < Constants.MOTOR.expected_error);
                              });
+  }      
+
+  public boolean isAtPosition(double expected_position){
+    Constants.MOTOR.current_position = m_test_motor.getPosition().getValueAsDouble();
+    return Math.abs(Constants.MOTOR.MOTOR_POSITION_1 - Constants.MOTOR.current_position) <= Constants.MOTOR.expected_error;
+  }
+  
+  // public boolean isAtPosition2(double expected_position){
+  //   current_position = m_test_motor.getPosition().getValueAsDouble();
+  //   return Math.abs(Constants.MOTOR.MOTOR_POSITION_2 - current_position) <= expected_error;
+  // }
+
+
+  public Command Motor_Move_WithfinallyDo(double expected_position ,double expected_velocity){
+      return run(()->{
+        setmotorPosition(expected_position); // Set the motor to move at 1000 units per second
+        setmotorVelocity(expected_velocity);
+      })
+      .until(()->isAtPosition(expected_position))
+      .finallyDo(()->{
+          Motor_stop();
+      });
+    }
+
+  public double Get_Motor_Position(){
+    return m_test_motor.getPosition().getValueAsDouble();
   }
 
-
+  //电机停止Command
   public Command Motor_stop (){
     return runOnce(()->{
                       setmotorVelocity(0);
+                      setmotorPosition(Get_Motor_Position());
                   });
   }
 
-  /**andthen()
-   * until()
-   * run()
-   * runonce()
-   * runend
-   * 
-   * 小的一步步组成，复杂的
-   * 
-   * whileTrue
-   * onTrue
-  */
+                               //在到达预期值后停下
+  public Command Motor_Move_VelocityTorqueCurrentFOC (double Velocity){
+    return run(()->{
+                      setmotorVelocity(Velocity); // Set the motor to move at 1000 units per second
+                  })
+                  .until(()->{
+                                return (Math.abs(m_test_motor.getPosition().getValueAsDouble()-Constants.MOTOR.wantedvalue) < Constants.MOTOR.expected_error);
+                             });
+  }
 
-  // public Command Motor_Velocity_withRunend(double velocity){
-  //   return runEnd(()->{
-  //     setmotorVelocity(velocity);
-  //   },
-  //   ()->{
-  //     setmotorVelocity(0);
-  //   });
-  // }
+       //摁住启动松开停止
+    public Command Motor_Velocity_withRunend(double velocity){
+    return runEnd(()->{
+      setmotorVelocity(velocity);
+    },
+    ()->{
+      setmotorVelocity(0);
+    });
+  }
 
   /**
    * An example method querying a boolean state of the subsystem (for example, a digital sensor).
@@ -244,9 +220,61 @@ public class drive extends SubsystemBase {
   }
 }
 
+/**
+ * 调正代码结构
+git 多分支切换可能遇到的问题：
+//your local changes should be overwritten by checkout
+当前分支有没有提交过的更改，如果直接切换到其他分支，而没有对这些更改进行保存
+就会报错    →    暂时保存一下
+
+避免这个问题：
+1.每次开发前，查看自己在哪个分支
+2.分支确定无误后，再进行开发
+3.开发完成后，提交更改，推送代码
+4.切换到其他分支
+5.最后同步一下其他分支的代码
+ */
+
+/**andthen()
+ * until()
+ * run()
+ * runonce()
+ * runend()
+ * finallyDo()
+ * 
+ * 小的一步步组成，复杂的
+ * 
+ * whileTrue
+ * onTrue
+*/
+
+//Voltage_Out 原理：
+//假设最大输出电压是12v， 那么12v对应 1000r/min
+//6v                                500r/min
+//0v                                0r/min
+
+//开环控制：敞开的系统，他不准确，他也不知道自己准不准确，比较盲目
+//闭环控制：闭合的控制，相对准确，当他不准确的时候，他知道自己不准确，并且他自己知道他的状态和预期有差距
+//他就能根据这个差距，调整自己，然后接近我们的预期
+//闭环有一个反馈
+
+//想要控制速度到50
+//40-50-40-50-40-50   →    不稳定
+//想要控制位置到100
+//90-80-100-90-80-100    →    不稳定
+
+//想要控制速度到50
+//48-50-49-50-48-50    →   稳定
+//想要控制位置到100
+//100-98-97-100    →   稳定
+
+//电机不稳定
+//1.不安全    →   电机不受控
+//2.
+
+
+
 //拆分，把复杂问题简单化
-
-
 
 //Subsystem：
 //控制机器人
@@ -265,7 +293,6 @@ public class drive extends SubsystemBase {
 
 //底盘，电梯，Claw
 
-
 //command：
 //命令，指令：告诉机器人执行什么动作
 //能把我们的指令转换成机器人的实际动作
@@ -282,10 +309,9 @@ public class drive extends SubsystemBase {
 //但是frc，没有显式的for 和 while
 //periodic(): 每隔20ms轮询一次
 
-
-
 /**
-电机参数的说明
+
+//电机参数的说明
 
 Position Control
 kG - output to overcome gravity (output)
@@ -303,7 +329,7 @@ kI - output per unit of integrated error in position (output/(rotation*s))
 kD - output per unit of error derivative in position (output/rps)
 每单位位置误差导数的输出（输出/rps
 
-电机参数的调试方法
+//电机参数的调试方法
 1.Set all gains to zero.
 将所有参数设为0
 
